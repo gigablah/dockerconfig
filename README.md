@@ -3,7 +3,9 @@ DockerConfig
 
 This package is essentially a fork of `github.com/docker/docker/cliconfig`.
 
-The main difference is the ability to manage both legacy `.dockercfg` and new `config.json` (Docker 1.7+) configuration files.
+The main difference is the ability to manage both legacy `.dockercfg` and new `config.json` (Docker 1.7+) files.
+
+Migrations between both formats can be easily done by changing the version number.
 
 Usage
 -----
@@ -27,7 +29,7 @@ func main() {
 
 	fmt.Printf("Writing to Docker file %v...\n", config.Filename())
 
-	auth, ok := config.AuthConfigs[url]
+	auth, ok := config.AuthConfigs["example.com"]
 	if !ok {
 		auth = dockerconfig.AuthConfig{}
 	}
