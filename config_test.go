@@ -389,8 +389,9 @@ func TestConfigFile(t *testing.T) {
 func TestJsonReaderNoFile(t *testing.T) {
 	js := ` { "auths": { "https://index.docker.io/v1/": { "auth": "am9lam9lOmhlbGxv", "email": "user@example.com" } } }`
 
-	config := &configFileV2{ConfigFile: NewConfigFile("")}
-	err := config.LoadFromReader(strings.NewReader(js))
+	v2 := &v2{}
+	config := NewConfigFile("")
+	err := v2.LoadFromReader(strings.NewReader(js), config)
 	if err != nil {
 		t.Fatalf("Failed loading on empty json file: %q", err)
 	}
@@ -404,8 +405,9 @@ func TestJsonReaderNoFile(t *testing.T) {
 func TestOldJsonReaderNoFile(t *testing.T) {
 	js := `{"https://index.docker.io/v1/":{"auth":"am9lam9lOmhlbGxv","email":"user@example.com"}}`
 
-	config := &configFileV1{ConfigFile: NewConfigFile("")}
-	err := config.LoadFromReader(strings.NewReader(js))
+	v1 := &v1{}
+	config := NewConfigFile("")
+	err := v1.LoadFromReader(strings.NewReader(js), config)
 	if err != nil {
 		t.Fatalf("Failed loading on empty json file: %q", err)
 	}
@@ -422,8 +424,9 @@ func TestJsonWithPsFormatNoFile(t *testing.T) {
 		"psFormat": "table {{.ID}}\\t{{.Label \"com.docker.label.cpu\"}}"
 }`
 
-	config := &configFileV2{ConfigFile: NewConfigFile("")}
-	err := config.LoadFromReader(strings.NewReader(js))
+	v2 := &v2{}
+	config := NewConfigFile("")
+	err := v2.LoadFromReader(strings.NewReader(js), config)
 	if err != nil {
 		t.Fatalf("Failed loading on empty json file: %q", err)
 	}
@@ -439,9 +442,10 @@ func TestJsonSaveWithNoFile(t *testing.T) {
 		"psFormat": "table {{.ID}}\\t{{.Label \"com.docker.label.cpu\"}}"
 }`
 
-	config := &configFileV2{ConfigFile: NewConfigFile("")}
-	err := config.LoadFromReader(strings.NewReader(js))
-	err = config.ConfigFile.Save()
+	v2 := &v2{}
+	config := NewConfigFile("")
+	err := v2.LoadFromReader(strings.NewReader(js), config)
+	err = config.Save()
 	if err != nil {
 		t.Fatalf("File should have been saved with default filename.")
 	}
@@ -454,7 +458,7 @@ func TestJsonSaveWithNoFile(t *testing.T) {
 
 	fn := filepath.Join(tmpHome, configFileNameV2)
 	f, _ := os.OpenFile(fn, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	err = config.SaveToWriter(f)
+	err = v2.SaveToWriter(f, config)
 	if err != nil {
 		t.Fatalf("Failed saving to file: %q", err)
 	}
@@ -468,9 +472,10 @@ func TestJsonSaveWithNoFile(t *testing.T) {
 func TestLegacyJsonSaveWithNoFile(t *testing.T) {
 	js := `{"https://index.docker.io/v1/":{"auth":"am9lam9lOmhlbGxv","email":"user@example.com"}}`
 
-	config := &configFileV1{ConfigFile: NewConfigFile("")}
-	err := config.LoadFromReader(strings.NewReader(js))
-	err = config.ConfigFile.Save()
+	v1 := &v1{}
+	config := NewConfigFile("")
+	err := v1.LoadFromReader(strings.NewReader(js), config)
+	err = config.Save()
 	if err != nil {
 		t.Fatalf("File should have been saved with default filename.")
 	}
@@ -483,7 +488,7 @@ func TestLegacyJsonSaveWithNoFile(t *testing.T) {
 
 	fn := filepath.Join(tmpHome, configFileNameV1)
 	f, _ := os.OpenFile(fn, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	err = config.SaveToWriter(f)
+	err = v1.SaveToWriter(f, config)
 	if err != nil {
 		t.Fatalf("Failed saving to file: %q", err)
 	}

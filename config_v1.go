@@ -17,12 +17,11 @@ const (
 	defaultIndexserver = "https://index.docker.io/v1/"
 )
 
-type configFileV1 struct {
-	*ConfigFile
-	ConfigReadWriter `json:"-"`
+type v1 struct {
+	ConfigReadWriter
 }
 
-func (c *configFileV1) ConfigDir() string {
+func (v *v1) ConfigDir(c *ConfigFile) string {
 	configDir := c.configDir
 	if configDir == "" {
 		configDir = getHomeDir()
@@ -30,15 +29,15 @@ func (c *configFileV1) ConfigDir() string {
 	return configDir
 }
 
-func (c *configFileV1) Filename() string {
+func (v *v1) Filename(c *ConfigFile) string {
 	filename := c.filename
 	if filename == "" {
 		filename = configFileNameV1
 	}
-	return filepath.Join(c.ConfigDir(), filename)
+	return filepath.Join(v.ConfigDir(c), filename)
 }
 
-func (c *configFileV1) LoadFromReader(r io.Reader) error {
+func (v *v1) LoadFromReader(r io.Reader, c *ConfigFile) error {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return err
@@ -79,7 +78,7 @@ func (c *configFileV1) LoadFromReader(r io.Reader) error {
 	return nil
 }
 
-func (c *configFileV1) SaveToWriter(w io.Writer) error {
+func (v *v1) SaveToWriter(w io.Writer, c *ConfigFile) error {
 	// Encode sensitive data into a new/temp struct
 	tmpAuthConfigs := make(map[string]AuthConfig, len(c.AuthConfigs))
 	for k, authConfig := range c.AuthConfigs {

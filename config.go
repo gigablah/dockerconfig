@@ -52,30 +52,30 @@ func NewConfigFile(fn string) *ConfigFile {
 
 // ConfigReadWriter interface
 type ConfigReadWriter interface {
-	LoadFromReader(r io.Reader) error
-	SaveToWriter(w io.Writer)   error
-	ConfigDir()                 string
-	Filename()                  string
+	LoadFromReader(r io.Reader, c *ConfigFile) error
+	SaveToWriter(w io.Writer, c *ConfigFile)   error
+	ConfigDir(c *ConfigFile)                   string
+	Filename(c *ConfigFile)                    string
 }
 
-// NewConfigReadWriter returns a ConfigReadWriter based on the ConfigFile version
-func NewConfigReadWriter(c *ConfigFile) (ConfigReadWriter, error) {
-	switch c.version {
+// NewConfigReadWriter returns a ConfigReadWriter based on the version
+func NewConfigReadWriter(version int) (ConfigReadWriter, error) {
+	switch version {
 	case 1:
-		return &configFileV1{ConfigFile: c}, nil
+		return &v1{}, nil
 	case 2:
-		return &configFileV2{ConfigFile: c}, nil
+		return &v2{}, nil
 	}
 	return nil, fmt.Errorf("Unknown version")
 }
 
 // Load reads the config file and decodes the authorization information
 func (c *ConfigFile) Load() error {
-	rw, err := NewConfigReadWriter(c)
+	rw, err := NewConfigReadWriter(c.version)
 	if err != nil {
 		return err
 	}
-	filename := rw.Filename()
+	filename := rw.Filename(c)
 	if _, err := os.Stat(filename); err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (c *ConfigFile) Load() error {
 	if err != nil {
 		return err
 	}
-	err = rw.LoadFromReader(file)
+	err = rw.LoadFromReader(file, c)
 	if err != nil {
 		return err
 	}
@@ -93,11 +93,11 @@ func (c *ConfigFile) Load() error {
 
 // Save encodes and writes out all the authorization information
 func (c *ConfigFile) Save() error {
-	rw, err := NewConfigReadWriter(c)
+	rw, err := NewConfigReadWriter(c.version)
 	if err != nil {
 		return err
 	}
-	filename := rw.Filename()
+	filename := rw.Filename(c)
 	if filename == "" {
 		return fmt.Errorf("Can't save config with empty filename")
 	}
@@ -109,25 +109,25 @@ func (c *ConfigFile) Save() error {
 		return err
 	}
 	defer file.Close()
-	return rw.SaveToWriter(file)
+	return rw.SaveToWriter(file, c)
 }
 
 // Filename returns the current config file location
 func (c *ConfigFile) Filename() string {
-	rw, err := NewConfigReadWriter(c)
+	rw, err := NewConfigReadWriter(c.version)
 	if err != nil {
 		return ""
 	}
-	return rw.Filename()
+	return rw.Filename(c)
 }
 
 // ConfigDir returns the directory the config file is stored in
 func (c *ConfigFile) ConfigDir() string {
-	rw, err := NewConfigReadWriter(c)
+	rw, err := NewConfigReadWriter(c.version)
 	if err != nil {
 		return ""
 	}
-	return rw.ConfigDir()
+	return rw.ConfigDir(c)
 }
 
 // Load is a convenience function that attempts to load a v2 config with v1 fallback
